@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="display: flex; justify-content: center; align-items: center; min-height: 80vh; padding: 2rem;">
+    <div class="glass-card" style="width: 100%; max-width: 600px; text-align: center;">
+        <h2 style="margin-bottom: 20px;" data-i18n="track_modal_title">Track Your Grievance</h2>
+
+        <div class="form-group">
+            <label style="text-align: left; display: block;" data-i18n="enter_complaint_id">Enter Complaint ID</label>
+            <input type="text" id="track-id" placeholder="e.g. CG12345678"
+                style="padding: 15px; font-size: 1.2rem; margin-top: 10px;">
+        </div>
+
+        <button onclick="trackGrievancePage()" class="btn btn-primary"
+            style="width: 100%; margin-top: 20px; padding: 15px; font-size: 1.1rem;" data-i18n="track_status">Track
+            Status</button>
+
+        <div id="track-result"
+            style="margin-top:30px; display:none; text-align: left; background: rgba(255,255,255,0.6); padding: 20px; border-radius: 10px;">
+            <h3 id="res-status" style="color: var(--primary);"></h3>
+            <div id="res-details" style="margin-top: 15px; line-height: 1.8;"></div>
+
+            <div class="timeline" id="res-timeline" style="margin-top: 25px;">
+                <!-- Dynamic timeline -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function trackGrievancePage() {
+        const id = document.getElementById('track-id').value;
+        if (!id) return;
+
+        const res = await fetch(`/api/track/${id}`);
+        const data = await res.json();
+        const resultDiv = document.getElementById('track-result');
+        const detailsP = document.getElementById('res-details');
+        const statusH = document.getElementById('res-status');
+
+        if (data.success) {
+            resultDiv.style.display = 'block';
+            statusH.innerText = `Status: ${data.details.status}`;
+            statusH.setAttribute('data-i18n', 'status_' + data.details.status.toLowerCase().replace(' ', ''));
+
+            // translate status immediately if function available
+            if (typeof changeLanguage === 'function' && typeof currentLang !== 'undefined') {
+                const key = 'status_' + data.details.status.toLowerCase().replace(' ', '');
+                if (translations[currentLang][key]) statusH.innerText = translations[currentLang][key];
+            }
+
+            detailsP.innerHTML = `
+                <strong>Complaint ID:</strong> ${data.details.id}<br>
+                <strong>Date:</strong> ${data.details.date}<br>
+                <strong>Sector:</strong> ${data.details.sector}<br>
+                <strong>Priority:</strong> <span class="priority-badge ${data.details.priority.toLowerCase()}">${data.details.priority}</span>
+            `;
+
+            // Build timeline logic
+            const status = data.details.status;
+            const steps = ['Submitted', 'Assigned', 'In Progress', 'Resolved'];
+            let timelineHtml = '';
+            steps.forEach(step => {
+                const isActive = steps.indexOf(step) <= steps.indexOf(status);
+                timelineHtml += `
+                    <div class="timeline-step">
+                        <div class="step-indicator ${isActive ? 'active' : ''}"></div>
+                        <div class="step-text">${step}</div>
+                    </div>
+                `;
+            });
+            document.getElementById('res-timeline').innerHTML = timelineHtml;
+        } else {
+            alert(data.message);
+            resultDiv.style.display = 'none';
+        }
+    }
+</script>
+
+<style>
+    .priority-badge {
+        padding: 3px 10px;
+        border-radius: 10px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+
+    .high {
+        background: #ffebee;
+        color: #c62828;
+    }
+
+    .medium {
+        background: #fff3e0;
+        color: #ef6c00;
+    }
+
+    .low {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+</style>
+{% endblock %}
