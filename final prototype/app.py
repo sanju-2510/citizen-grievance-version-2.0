@@ -9,7 +9,7 @@ from nlp_utils import detect_sector, detect_priority, get_cluster_id
 from datetime import datetime
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///grievance.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here-change-in-production')
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
