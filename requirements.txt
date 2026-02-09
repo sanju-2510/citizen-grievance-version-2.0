@@ -4,4 +4,4 @@ flask-cors
 python-dotenv
 twilio
 werkzeug
-
+gunicorn
